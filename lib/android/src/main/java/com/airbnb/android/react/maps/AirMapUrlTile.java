@@ -25,7 +25,7 @@ public class AirMapUrlTile extends AirMapFeature {
 
       String s = this.urlTemplate
           .replace("{x}", Integer.toString(x))
-          .replace("{y}", Integer.toString(y))
+          .replace("{y}", Integer.toString((1 << zoom) - 1 - y))
           .replace("{z}", Integer.toString(zoom));
       URL url = null;
 

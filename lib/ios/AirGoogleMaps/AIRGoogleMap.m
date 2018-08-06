@@ -12,6 +12,7 @@
 #import "AIRGoogleMapPolyline.h"
 #import "AIRGoogleMapCircle.h"
 #import "AIRGoogleMapUrlTile.h"
+#import "AIRGoogleMapLocalTile.h"
 #import "AIRGoogleMapOverlay.h"
 #import <GoogleMaps/GoogleMaps.h>
 #import <Google-Maps-iOS-Utils/GMUKMLParser.h>
@@ -118,6 +119,10 @@ id regionAsJSON(MKCoordinateRegion region) {
     [self.circles addObject:circle];
   } else if ([subview isKindOfClass:[AIRGoogleMapUrlTile class]]) {
     AIRGoogleMapUrlTile *tile = (AIRGoogleMapUrlTile*)subview;
+    tile.tileLayer.map = self;
+    [self.tiles addObject:tile];
+  } else if ([subview isKindOfClass:[AIRGoogleMapLocalTile class]]) {
+    AIRGoogleMapLocalTile *tile = (AIRGoogleMapLocalTile*)subview;
     tile.tileLayer.map = self;
     [self.tiles addObject:tile];
   } else if ([subview isKindOfClass:[AIRGoogleMapOverlay class]]) {

@@ -10,8 +10,9 @@
 @implementation AIRGoogleMapLocalTile
 
 - (void)setPathTemplate:(NSString *)pathTemplate {
-    self.pathTemplate = pathTemplate;
-    self.tileLayer = [AIRGoogleMapRealLocalTile new];
+    _pathTemplate = pathTemplate;
+    _tileLayer = [AIRGoogleMapLocalTileOverlay new];
+    _tileLayer.pathTemplate = pathTemplate;
 }
 
 @end

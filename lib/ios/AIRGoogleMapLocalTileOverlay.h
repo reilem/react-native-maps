@@ -8,8 +8,8 @@
 #import <Foundation/Foundation.h>
 #import <GoogleMaps/GoogleMaps.h>
 
-@interface AIRGoogleMapRealLocalTile : GMSTileLayer
+@interface AIRGoogleMapLocalTileOverlay : GMSTileLayer
 
-@property (nonatomic, copy) NSString *pathTemplate;
+@property (nonatomic, strong) NSString *pathTemplate;
 
 @end

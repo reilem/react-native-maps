@@ -11,8 +11,8 @@
 
 @interface AIRGoogleMapLocalTile : UIView
 
-@property (nonatomic, strong) AIRGoogleMapRealLocalTile *tileLayer;
+@property (nonatomic, strong) AIRGoogleMapLocalTileOverlay *tileLayer;
 
-@property (nonatomic, copy) NSString *pathTemplate;
+@property (nonatomic, assign) NSString *pathTemplate;
 
 @end

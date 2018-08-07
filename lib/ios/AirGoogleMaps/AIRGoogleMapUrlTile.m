@@ -16,7 +16,10 @@
 - (void)setUrlTemplate:(NSString *)urlTemplate
 {
   _urlTemplate = urlTemplate;
+  GMSMapView *map = _tileLayer.map;
+  _tileLayer.map = nil;
   _tileLayer = [GMSURLTileLayer tileLayerWithURLConstructor:[self _getTileURLConstructor]];
+  _tileLayer.map = map;
   _tileLayer.tileSize = [[UIScreen mainScreen] scale] * 256;
 }
 

@@ -11,7 +11,10 @@
 
 - (void)setPathTemplate:(NSString *)pathTemplate {
     _pathTemplate = pathTemplate;
+    GMSMapView *map = _tileLayer.map;
+    _tileLayer.map = nil;
     _tileLayer = [AIRGoogleMapLocalTileOverlay new];
+    _tileLayer.map = map;
     _tileLayer.pathTemplate = pathTemplate;
 }
 

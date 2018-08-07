@@ -165,6 +165,10 @@ id regionAsJSON(MKCoordinateRegion region) {
     AIRGoogleMapUrlTile *tile = (AIRGoogleMapUrlTile*)subview;
     tile.tileLayer.map = nil;
     [self.tiles removeObject:tile];
+  } else if ([subview isKindOfClass:[AIRGoogleMapLocalTile class]]) {
+    AIRGoogleMapLocalTile *tile = (AIRGoogleMapLocalTile*)subview;
+    tile.tileLayer.map = nil;
+    [self.tiles removeObject:tile];
   } else if ([subview isKindOfClass:[AIRGoogleMapOverlay class]]) {
     AIRGoogleMapOverlay *overlay = (AIRGoogleMapOverlay*)subview;
     overlay.overlay.map = nil;
@@ -332,7 +336,7 @@ id regionAsJSON(MKCoordinateRegion region) {
       return @"automatic";
     case kGMSMapViewPaddingAdjustmentBehaviorAlways:
       return @"always";
-      
+
     default:
       return @"unknown";
   }

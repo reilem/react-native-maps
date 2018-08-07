@@ -12,4 +12,6 @@
 
 @property (nonatomic, strong) NSString *pathTemplate;
 
+- (NSURL *)urlPathForZ:(NSUInteger)z x:(NSUInteger)x y:(NSUInteger)y;
+
 @end

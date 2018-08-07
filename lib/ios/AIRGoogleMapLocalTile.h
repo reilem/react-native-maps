@@ -13,6 +13,6 @@
 
 @property (nonatomic, strong) AIRGoogleMapLocalTileOverlay *tileLayer;
 
-@property (nonatomic, assign) NSString *pathTemplate;
+@property (nonatomic, strong) NSString *pathTemplate;
 
 @end

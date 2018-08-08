@@ -13,30 +13,29 @@
 
 - (void)setFileTemplate:(NSString *)fileTemplate {
     _fileTemplate = fileTemplate;
-    _tileLayer = [self _createLocalOverlay];
+    [self _updateTileLayer];
 }
 
 - (void)setUrlTemplate:(NSString *)urlTemplate {
     _urlTemplate = urlTemplate;
-
-    if (!self.fileTemplate) {
-        _tileLayer = [self _createUrlOverlay];
-    } else if ((!self.fileTemplate && self.tempRange && self.currentTempRange) || self.fileTemplate) {
-        _tileLayer = [self _createLocalOverlay];
-    }
+    [self _updateTileLayer];
 }
 
 - (void)setTempRange:(NSArray *)tempRange {
     _tempRange = tempRange;
-    if (self.tempRange && self.currentTempRange) {
-        _tileLayer = [self _createLocalOverlay];
-    }
+    [self _updateTileLayer];
 }
 
 - (void)setCurrentTempRange:(NSArray *)currentTempRange {
     _currentTempRange = currentTempRange;
-    if (self.tempRange && self.currentTempRange) {
-        _tileLayer = [self _createLocalOverlay];
+    [self _updateTileLayer];
+}
+
+- (void)_updateTileLayer {
+    if (self.urlTemplate && !self.fileTemplate && !(self.tempRange && self.currentTempRange)) {
+        _tileLayer = [self _createUrlOverlay];
+    } else if ((!self.fileTemplate && self.tempRange && self.currentTempRange) || self.fileTemplate) {
+        _tileLayer = [self _createCustomOverlay];
     }
 }
 
@@ -51,7 +50,7 @@
     return newTileLayer;
 }
 
-- (AIRGoogleMapLocalTileOverlay *)_createLocalOverlay
+- (AIRGoogleMapLocalTileOverlay *)_createCustomOverlay
 {
     GMSMapView *map = nil;
     if (self.tileLayer) map = self.tileLayer.map;

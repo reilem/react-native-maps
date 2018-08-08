@@ -129,25 +129,16 @@
     unsigned char *colors = malloc(3);
     NSArray<PresetColor *> *magma = [self _getMagmaPreset];
     int index = 1;
-    for (int i = 1; i < [magma count]; i++) {
-        if (percent < magma[i].percent) {
-            index = i;
-            break;
-        }
+    for (index = 1; index < [magma count] - 1; index++) {
+        if (percent < magma[index].percent) break;
     }
     PresetColor *lower = magma[index - 1];
     PresetColor *upper = magma[index];
     double rangePercent = (percent - lower.percent) / (upper.percent - lower.percent);
     double percentLower = 1 - rangePercent;
-    double red = lower.color.r * percentLower + upper.color.r * rangePercent;
-    double green = lower.color.g * percentLower + upper.color.g * rangePercent;
-    double blue = lower.color.b * percentLower + upper.color.b * rangePercent;
-    if (blue > red && blue > green) {
-        printf("(%f,%f,%f) %f %f", red, green, blue, rangePercent, percentLower);
-    }
-    colors[0] = floor(red);
-    colors[1] = floor(green);
-    colors[2] = floor(blue);
+    colors[0] = floor(lower.color.r * percentLower + upper.color.r * rangePercent);
+    colors[1] = floor(lower.color.g * percentLower + upper.color.g * rangePercent);
+    colors[2] = floor(lower.color.b * percentLower + upper.color.b * rangePercent);
     return colors;
 }
 

@@ -379,7 +379,10 @@ declare module "react-native-maps" {
     }
 
     export interface MapLocalTileProps extends ViewProperties {
-        pathTemplate: string;
+        fileTemplate: string | null;
+        urlTemplate: string | null;
+        tempRange: number[] | null;
+        currentTempRange: number[] | null;
         tileSize?: number;
         zIndex?: number;
     }

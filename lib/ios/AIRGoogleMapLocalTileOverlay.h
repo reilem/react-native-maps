@@ -24,7 +24,4 @@
 - (NSString *)parsePath:(NSString *)path z:(NSUInteger)z x:(NSUInteger)x y:(NSUInteger)y;
 - (UIImage *)processImage:(UIImage *)image;
 
-- (NSArray<PresetColor *> *)getMagmaPreset;
-- (unsigned char *)getColorForPercentage:(float)percent;
-
 @end

@@ -56,7 +56,7 @@
 }
 
 -(UIImage *)processImage:(UIImage *)image {
-    if (!self.tempRange || !self.currentTempRange) return image;
+    if (!self.tempRange || !self.currentTempRange || !image) return image;
     NSNumber *minTemp = self.tempRange[0];
     NSNumber *maxTemp = self.tempRange[1];
     NSNumber *currentMinTemp = self.currentTempRange[0];
@@ -80,22 +80,23 @@
             uint red = pixels[idx];
             uint green = pixels[idx+1];
             uint blue = pixels[idx+2];
+            uint alpha = pixels[idx+3];
 
-            if (minTemp == nil || maxTemp == nil || blue == 0) {
+            if (minTemp == nil || maxTemp == nil || alpha == 0) {
                 pixels[idx] = 0;
                 pixels[idx+1] = 0;
                 pixels[idx+2] = 0;
             } else {
-                long step = ([maxTemp longValue] - [minTemp longValue]) / (256 * 256);
-                long elevation = [minTemp longValue] + (red * 256 + green + blue) * step;
+                double step = ([maxTemp doubleValue] - [minTemp doubleValue]) / (256 * 256);
+                double elevation = [minTemp doubleValue] + (red * 256 + green + blue) * step;
                 unsigned char *colors;
-                if (elevation < [currentMinTemp longValue]) {
-                    colors = [self getColorForPercentage:0];
-                } else if (elevation > [currentMaxTemp longValue]) {
-                    colors = [self getColorForPercentage:1];
+                if (elevation < [currentMinTemp doubleValue]) {
+                    colors = [self _getColorForPercentage:0];
+                } else if (elevation > [currentMaxTemp doubleValue]) {
+                    colors = [self _getColorForPercentage:1];
                 } else {
-                    float ratio = (elevation - [currentMinTemp longValue]) / ([currentMaxTemp longValue] - [currentMinTemp longValue]);
-                    colors = [self getColorForPercentage:ratio];
+                    double ratio = (elevation - [currentMinTemp doubleValue]) / ([currentMaxTemp doubleValue] - [currentMinTemp doubleValue]);
+                    colors = [self _getColorForPercentage:ratio];
                 }
                 pixels[idx] = colors[0];
                 pixels[idx+1] = colors[1];
@@ -113,7 +114,7 @@
     return [UIImage imageWithCGImage:cgImage];
 }
 
-- (NSArray<PresetColor *> *)getMagmaPreset {
+- (NSArray<PresetColor *> *)_getMagmaPreset {
     return [NSArray arrayWithObjects:
         [PresetColor makeWithPercent:0 color:[SimpleColor makeWithR:1 g:1 b:6]],
         [PresetColor makeWithPercent:0.25 color:[SimpleColor makeWithR:72 g:20 b:97]],
@@ -124,9 +125,9 @@
     ];
 }
 
-- (unsigned char *)getColorForPercentage:(float)percent {
+- (unsigned char *)_getColorForPercentage:(double)percent {
     unsigned char *colors = malloc(3);
-    NSArray<PresetColor *> *magma = [self getMagmaPreset];
+    NSArray<PresetColor *> *magma = [self _getMagmaPreset];
     int index = 1;
     for (int i = 1; i < [magma count]; i++) {
         if (percent < magma[i].percent) {
@@ -136,12 +137,17 @@
     }
     PresetColor *lower = magma[index - 1];
     PresetColor *upper = magma[index];
-    float rangePercent = (percent - lower.percent) / (upper.percent - lower.percent);
-    float percentLower = 1 - rangePercent;
-    float percentUpper = rangePercent;
-    colors[0] = floor(lower.color.r * percentLower + upper.color.r * percentUpper);
-    colors[1] =  floor(lower.color.g * percentLower + upper.color.g * percentUpper);
-    colors[2] = floor(lower.color.b * percentLower + upper.color.b * percentUpper);
+    double rangePercent = (percent - lower.percent) / (upper.percent - lower.percent);
+    double percentLower = 1 - rangePercent;
+    double red = lower.color.r * percentLower + upper.color.r * rangePercent;
+    double green = lower.color.g * percentLower + upper.color.g * rangePercent;
+    double blue = lower.color.b * percentLower + upper.color.b * rangePercent;
+    if (blue > red && blue > green) {
+        printf("(%f,%f,%f) %f %f", red, green, blue, rangePercent, percentLower);
+    }
+    colors[0] = floor(red);
+    colors[1] = floor(green);
+    colors[2] = floor(blue);
     return colors;
 }
 

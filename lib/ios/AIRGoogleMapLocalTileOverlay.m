@@ -18,25 +18,23 @@
 }
 
 - (void)setTempRange:(NSArray *)tempRange {
+    printf("Local set temp range\n");
     _tempRange = tempRange;
 }
 
 - (void)setCurrentTempRange:(NSArray *)currentTempRange {
+    printf("Local set current temp range\n");
     _currentTempRange = currentTempRange;
 }
 
 - (void)requestTileForX:(NSUInteger)x y:(NSUInteger)y zoom:(NSUInteger)zoom receiver:(id<GMSTileReceiver>)receiver {
-    printf("/%i/%i/%i\n", (unsigned int)zoom, (unsigned int)x, (unsigned int)y);
     NSURL *urlFilePath = [self urlFilePathForZ:zoom x:x y:y];
     if ([[NSFileManager defaultManager] fileExistsAtPath:urlFilePath.path]) {
-        printf("Local");
         [receiver receiveTileWithX:x y:y zoom:zoom image:[self processImage:[UIImage imageWithData:[NSData dataWithContentsOfFile:urlFilePath.path]]]];
     } else if (self.urlTemplate) {
-        printf("Internet");
         NSData *urlImageData = [NSData dataWithContentsOfURL:[self urlInternetPathForZ:zoom x:x y:y]];
         [receiver receiveTileWithX:x y:y zoom:zoom image:[self processImage:[UIImage imageWithData:urlImageData]]];
     } else {
-        printf("No tile");
         [receiver receiveTileWithX:x y:y zoom:zoom image:kGMSTileLayerNoTile];
     }
 }

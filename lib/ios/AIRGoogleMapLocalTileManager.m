@@ -24,4 +24,6 @@ RCT_EXPORT_VIEW_PROPERTY(urlTemplate, NSString)
 
 RCT_EXPORT_VIEW_PROPERTY(tempRange, NSArray)
 
+RCT_EXPORT_VIEW_PROPERTY(currentTempRange, NSArray)
+
 @end

@@ -12,11 +12,10 @@
 
 @interface AIRGoogleMapLocalTile : UIView
 
-@property (nonatomic, strong) AIRGoogleMapLocalTileOverlay *tileLayer;
-
-@property (nonatomic, strong) NSString *fileTemplate;
-@property (nonatomic, strong) NSString *urlTemplate;
+@property (nonatomic, strong) GMSTileLayer *tileLayer;
+@property (nonatomic, weak) NSString *fileTemplate;
+@property (nonatomic, weak) NSString *urlTemplate;
 @property (nonatomic, weak) NSArray *tempRange;
-@property (nonatomic, strong) NSArray *currentTempRange;
+@property (nonatomic, weak) NSArray *currentTempRange;
 
 @end

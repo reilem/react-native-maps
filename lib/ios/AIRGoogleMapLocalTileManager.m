@@ -18,6 +18,10 @@ RCT_EXPORT_MODULE()
     return tileLayer;
 }
 
-RCT_EXPORT_VIEW_PROPERTY(pathTemplate, NSString)
+RCT_EXPORT_VIEW_PROPERTY(fileTemplate, NSString)
+
+RCT_EXPORT_VIEW_PROPERTY(urlTemplate, NSString)
+
+RCT_EXPORT_VIEW_PROPERTY(tempRange, NSArray)
 
 @end

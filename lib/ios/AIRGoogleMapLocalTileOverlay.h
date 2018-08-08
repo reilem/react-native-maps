@@ -7,11 +7,24 @@
 
 #import <Foundation/Foundation.h>
 #import <GoogleMaps/GoogleMaps.h>
+#import "PresetColor.h"
+#import "SimpleColor.h"
+
 
 @interface AIRGoogleMapLocalTileOverlay : GMSTileLayer
 
-@property (nonatomic, strong) NSString *pathTemplate;
+@property (nonatomic, strong) NSString *fileTemplate;
+@property (nonatomic, strong) NSString *urlTemplate;
+@property (nonatomic, strong) NSArray *tempRange;
+@property (nonatomic, strong) NSArray *currentTempRange;
 
-- (NSURL *)urlPathForZ:(NSUInteger)z x:(NSUInteger)x y:(NSUInteger)y;
+- (NSURL *)urlInternetPathForZ:(NSUInteger)z x:(NSUInteger)x y:(NSUInteger)y;
+- (NSURL *)urlFilePathForZ:(NSUInteger)z x:(NSUInteger)x y:(NSUInteger)y;
+
+- (NSString *)parsePath:(NSString *)path z:(NSUInteger)z x:(NSUInteger)x y:(NSUInteger)y;
+- (UIImage *)processImage:(UIImage *)image;
+
+- (NSArray<PresetColor *> *)getMagmaPreset;
+- (unsigned char *)getColorForPercentage:(float)percent;
 
 @end

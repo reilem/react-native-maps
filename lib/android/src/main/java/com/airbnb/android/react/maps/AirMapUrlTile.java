@@ -24,9 +24,9 @@ public class AirMapUrlTile extends AirMapFeature {
     public synchronized URL getTileUrl(int x, int y, int zoom) {
 
       String s = this.urlTemplate
-          .replace("{x}", Integer.toString(x))
-          .replace("{y}", Integer.toString((1 << zoom) - 1 - y))
-          .replace("{z}", Integer.toString(zoom));
+              .replace("{x}", Integer.toString(x))
+              .replace("{y}", Integer.toString((1 << zoom) - 1 - y))
+              .replace("{z}", Integer.toString(zoom));
       URL url = null;
 
       if(AirMapUrlTile.this.maximumZ > 0 && zoom > maximumZ) {

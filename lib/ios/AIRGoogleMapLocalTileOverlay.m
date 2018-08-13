@@ -7,7 +7,25 @@
 
 #import "AIRGoogleMapLocalTileOverlay.h"
 
+static NSArray *magmaPreset = nil;
+
 @implementation AIRGoogleMapLocalTileOverlay
+
+- (instancetype)init
+{
+    self = [super init];
+    if (self) {
+        magmaPreset = [NSArray arrayWithObjects:
+            [PresetColor makeWithPercent:0 color:[SimpleColor makeWithR:1 g:1 b:6]],
+            [PresetColor makeWithPercent:0.25 color:[SimpleColor makeWithR:72 g:20 b:97]],
+            [PresetColor makeWithPercent:0.5 color:[SimpleColor makeWithR:176 g:47 b:76]],
+            [PresetColor makeWithPercent:0.75 color:[SimpleColor makeWithR:243 g:109 b:24]],
+            [PresetColor makeWithPercent:1.0 color:[SimpleColor makeWithR:249 g:251 b:147]],
+            nil
+        ];
+    }
+    return self;
+}
 
 - (void)setFileTemplate:(NSString *)fileTemplate {
     _fileTemplate = fileTemplate;
@@ -18,12 +36,10 @@
 }
 
 - (void)setTempRange:(NSArray *)tempRange {
-    printf("Local set temp range\n");
     _tempRange = tempRange;
 }
 
 - (void)setCurrentTempRange:(NSArray *)currentTempRange {
-    printf("Local set current temp range\n");
     _currentTempRange = currentTempRange;
 }
 
@@ -114,20 +130,9 @@
     return [UIImage imageWithCGImage:cgImage];
 }
 
-- (NSArray<PresetColor *> *)_getMagmaPreset {
-    return [NSArray arrayWithObjects:
-        [PresetColor makeWithPercent:0 color:[SimpleColor makeWithR:1 g:1 b:6]],
-        [PresetColor makeWithPercent:0.25 color:[SimpleColor makeWithR:72 g:20 b:97]],
-        [PresetColor makeWithPercent:0.5 color:[SimpleColor makeWithR:176 g:47 b:76]],
-        [PresetColor makeWithPercent:0.75 color:[SimpleColor makeWithR:243 g:109 b:24]],
-        [PresetColor makeWithPercent:1.0 color:[SimpleColor makeWithR:249 g:251 b:147]],
-        nil
-    ];
-}
-
 - (unsigned char *)_getColorForPercentage:(double)percent {
     unsigned char *colors = malloc(3);
-    NSArray<PresetColor *> *magma = [self _getMagmaPreset];
+    NSArray<PresetColor *> *magma = magmaPreset;
     int index = 1;
     for (index = 1; index < [magma count] - 1; index++) {
         if (percent < magma[index].percent) break;

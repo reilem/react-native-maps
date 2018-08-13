@@ -15,7 +15,7 @@
 @property (nonatomic, strong) GMSTileLayer *tileLayer;
 @property (nonatomic, weak) NSString *fileTemplate;
 @property (nonatomic, weak) NSString *urlTemplate;
-@property (nonatomic, weak) NSArray *tempRange;
+@property (nonatomic, weak) NSArray *maxTempRange;
 @property (nonatomic, weak) NSArray *currentTempRange;
 
 @end

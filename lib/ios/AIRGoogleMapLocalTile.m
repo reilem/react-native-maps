@@ -21,8 +21,8 @@
     [self _updateTileLayer];
 }
 
-- (void)setTempRange:(NSArray *)tempRange {
-    _tempRange = tempRange;
+- (void)setMaxTempRange:(NSArray *)maxTempRange {
+    _maxTempRange = maxTempRange;
     [self _updateTileLayer];
 }
 
@@ -32,9 +32,10 @@
 }
 
 - (void)_updateTileLayer {
-    if (self.urlTemplate && !self.fileTemplate && !(self.tempRange && self.currentTempRange)) {
+    BOOL onlineReady = self.urlTemplate && !self.fileTemplate;
+    if (onlineReady && !(self.maxTempRange && self.currentTempRange)) {
         _tileLayer = [self _createUrlOverlay];
-    } else if ((!self.fileTemplate && self.tempRange && self.currentTempRange) || self.fileTemplate) {
+    } else if (onlineReady || self.fileTemplate) {
         _tileLayer = [self _createCustomOverlay];
     }
 }
@@ -67,16 +68,16 @@
 
 - (GMSTileURLConstructor)_getTileURLConstructor
 {
-  NSString *urlTemplate = self.urlTemplate;
-  GMSTileURLConstructor urls = ^NSURL* _Nullable (NSUInteger x, NSUInteger y, NSUInteger zoom) {
-    NSString *url = urlTemplate;
-    url = [url stringByReplacingOccurrencesOfString:@"{x}" withString:[NSString stringWithFormat: @"%ld", (long)x]];
-    url = [url stringByReplacingOccurrencesOfString:@"{y}" withString:[NSString stringWithFormat: @"%ld", (long)(1 << zoom) - 1 - y]];
-    url = [url stringByReplacingOccurrencesOfString:@"{z}" withString:[NSString stringWithFormat: @"%ld", (long)zoom]];
+    NSString *urlTemplate = self.urlTemplate;
+    GMSTileURLConstructor urls = ^NSURL* _Nullable (NSUInteger x, NSUInteger y, NSUInteger zoom) {
+        NSString *url = urlTemplate;
+        url = [url stringByReplacingOccurrencesOfString:@"{x}" withString:[NSString stringWithFormat: @"%ld", (long)x]];
+        url = [url stringByReplacingOccurrencesOfString:@"{y}" withString:[NSString stringWithFormat: @"%ld", (long)(1 << zoom) - 1 - y]];
+        url = [url stringByReplacingOccurrencesOfString:@"{z}" withString:[NSString stringWithFormat: @"%ld", (long)zoom]];
 
-    return [NSURL URLWithString:url];
-  };
-  return urls;
+        return [NSURL URLWithString:url];
+    };
+    return urls;
 }
 
 @end

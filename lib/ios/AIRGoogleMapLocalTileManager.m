@@ -22,7 +22,7 @@ RCT_EXPORT_VIEW_PROPERTY(fileTemplate, NSString)
 
 RCT_EXPORT_VIEW_PROPERTY(urlTemplate, NSString)
 
-RCT_EXPORT_VIEW_PROPERTY(tempRange, NSArray)
+RCT_EXPORT_VIEW_PROPERTY(maxTempRange, NSArray)
 
 RCT_EXPORT_VIEW_PROPERTY(currentTempRange, NSArray)
 

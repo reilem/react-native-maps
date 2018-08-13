@@ -48,9 +48,9 @@ public class AirMapLocalTileManager extends ViewGroupManager<AirMapLocalTile> {
         view.setUrlTemplate(urlTemplate);
     }
 
-    @ReactProp(name = "tempRange")
-    public void setTempRange(AirMapLocalTile view, ReadableArray tempRange) {
-        view.setTempRange(toDoubleArray(tempRange));
+    @ReactProp(name = "maxTempRange")
+    public void setMaxTempRange(AirMapLocalTile view, ReadableArray tempRange) {
+        view.setMaxTempRange(toDoubleArray(tempRange));
     }
 
     @ReactProp(name = "currentTempRange")

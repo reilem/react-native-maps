@@ -16,13 +16,13 @@ static NSArray *magmaPreset = nil;
     self = [super init];
     if (self) {
         magmaPreset = [NSArray arrayWithObjects:
-            [PresetColor makeWithPercent:0 color:[SimpleColor makeWithR:1 g:1 b:6]],
-            [PresetColor makeWithPercent:0.25 color:[SimpleColor makeWithR:72 g:20 b:97]],
-            [PresetColor makeWithPercent:0.5 color:[SimpleColor makeWithR:176 g:47 b:76]],
-            [PresetColor makeWithPercent:0.75 color:[SimpleColor makeWithR:243 g:109 b:24]],
-            [PresetColor makeWithPercent:1.0 color:[SimpleColor makeWithR:249 g:251 b:147]],
-            nil
-        ];
+                       [PresetColor makeWithPercent:0 color:[SimpleColor makeWithR:1 g:1 b:6]],
+                       [PresetColor makeWithPercent:0.25 color:[SimpleColor makeWithR:72 g:20 b:97]],
+                       [PresetColor makeWithPercent:0.5 color:[SimpleColor makeWithR:176 g:47 b:76]],
+                       [PresetColor makeWithPercent:0.75 color:[SimpleColor makeWithR:243 g:109 b:24]],
+                       [PresetColor makeWithPercent:1.0 color:[SimpleColor makeWithR:249 g:251 b:147]],
+                       nil
+                       ];
     }
     return self;
 }
@@ -35,8 +35,8 @@ static NSArray *magmaPreset = nil;
     _urlTemplate = urlTemplate;
 }
 
-- (void)setTempRange:(NSArray *)tempRange {
-    _tempRange = tempRange;
+- (void)setMaxTempRange:(NSArray *)maxTempRange {
+    _maxTempRange = maxTempRange;
 }
 
 - (void)setCurrentTempRange:(NSArray *)currentTempRange {
@@ -46,7 +46,7 @@ static NSArray *magmaPreset = nil;
 - (void)requestTileForX:(NSUInteger)x y:(NSUInteger)y zoom:(NSUInteger)zoom receiver:(id<GMSTileReceiver>)receiver {
     NSURL *urlFilePath = [self urlFilePathForZ:zoom x:x y:y];
     if ([[NSFileManager defaultManager] fileExistsAtPath:urlFilePath.path]) {
-        [receiver receiveTileWithX:x y:y zoom:zoom image:[self processImage:[UIImage imageWithData:[NSData dataWithContentsOfFile:urlFilePath.path]]]];
+        [receiver receiveTileWithX:x y:y zoom:zoom image:[self processImage:[UIImage imageWithContentsOfFile:urlFilePath.path]]];
     } else if (self.urlTemplate) {
         NSData *urlImageData = [NSData dataWithContentsOfURL:[self urlInternetPathForZ:zoom x:x y:y]];
         [receiver receiveTileWithX:x y:y zoom:zoom image:[self processImage:[UIImage imageWithData:urlImageData]]];
@@ -72,9 +72,9 @@ static NSArray *magmaPreset = nil;
 }
 
 -(UIImage *)processImage:(UIImage *)image {
-    if (!self.tempRange || !self.currentTempRange || !image) return image;
-    NSNumber *minTemp = self.tempRange[0];
-    NSNumber *maxTemp = self.tempRange[1];
+    if (!self.maxTempRange || !self.currentTempRange || !image) return image;
+    NSNumber *minTemp = self.maxTempRange[0];
+    NSNumber *maxTemp = self.maxTempRange[1];
     NSNumber *currentMinTemp = self.currentTempRange[0];
     NSNumber *currentMaxTemp = self.currentTempRange[1];
 

@@ -1,16 +1,10 @@
 package com.airbnb.android.react.maps;
 
 import android.content.Context;
-
-import android.util.Log;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.*;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -23,7 +17,7 @@ public class AirMapLocalTile extends AirMapFeature {
     private String fileTemplate;
     private String urlTemplate;
     private double[] currentTempRange;
-    private double[] tempRange;
+    private double[] maxTempRange;
     private float tileSize;
     private float zIndex;
 
@@ -41,8 +35,8 @@ public class AirMapLocalTile extends AirMapFeature {
         this.createTileOverlayOptions();
     }
 
-    public void setTempRange(double[] tempRange) {
-        this.tempRange = tempRange;
+    public void setMaxTempRange(double[] maxTempRange) {
+        this.maxTempRange = maxTempRange;
         this.createTileOverlayOptions();
     }
 
@@ -77,18 +71,12 @@ public class AirMapLocalTile extends AirMapFeature {
         options.zIndex(this.zIndex);
 
         boolean onlineReady = this.urlTemplate != null && this.fileTemplate == null;
-        if (onlineReady && (this.currentTempRange == null || this.tempRange == null)) {
-            AIRMapUrlTileProvider provider = new AirMapLocalTile.AIRMapUrlTileProvider(256, 256, this.urlTemplate);
-            provider.setUrlTemplate(this.urlTemplate);
+        if (onlineReady && (this.currentTempRange == null || this.maxTempRange == null)) {
+            AIRMapUrlTileProvider provider = new AirMapLocalTile.AIRMapUrlTileProvider(256, this.urlTemplate);
             options.tileProvider(provider);
             this.tileProvider = provider;
         } else if (onlineReady || this.fileTemplate != null) {
-            AIRMapLocalTileProvider provider = new AirMapLocalTile.AIRMapLocalTileProvider((int)this.tileSize, this.fileTemplate);
-            provider.setTileSize((int)this.tileSize);
-            provider.setCurrentTempRange(this.currentTempRange);
-            provider.setTempRange(this.tempRange);
-            provider.setUrlTemplate(this.urlTemplate);
-            provider.setFileTemplate(this.fileTemplate);
+            AIRMapLocalTileProvider provider = new AirMapLocalTile.AIRMapLocalTileProvider((int)this.tileSize, this.fileTemplate, this.urlTemplate, this.maxTempRange, this.currentTempRange);
             options.tileProvider(provider);
             this.tileProvider = provider;
         }
@@ -111,72 +99,27 @@ public class AirMapLocalTile extends AirMapFeature {
         this.tileOverlay.remove();
     }
 
-    class AIRMapUrlTileProvider extends UrlTileProvider {
-        private String urlTemplate;
-
-        public AIRMapUrlTileProvider(int width, int height, String urlTemplate) {
-            super(width, height);
-            this.urlTemplate = urlTemplate;
-        }
-
-        @Override
-        public synchronized URL getTileUrl(int x, int y, int zoom) {
-            String s = this.urlTemplate
-                    .replace("{x}", Integer.toString(x))
-                    .replace("{y}", Integer.toString((1 << zoom) - 1 - y))
-                    .replace("{z}", Integer.toString(zoom));
-            URL url;
-            try {
-                url = new URL(s);
-            } catch (MalformedURLException e) {
-                throw new AssertionError(e);
-            }
-            return url;
-        }
-
-        public void setUrlTemplate(String urlTemplate) {
-            this.urlTemplate = urlTemplate;
-        }
-    }
-
     class AIRMapLocalTileProvider implements TileProvider {
         private static final int BUFFER_SIZE = 16 * 1024;
         private int tileSize;
         private String fileTemplate;
         private String urlTemplate;
         private double[] currentTempRange;
-        private double[] tempRange;
+        private double[] maxTempRange;
 
 
-        public AIRMapLocalTileProvider(int tileSizet, String fileTemplate) {
+        public AIRMapLocalTileProvider(int tileSizet, String fileTemplate, String urlTemplate, double[] maxTempRange, double[] currentTempRange) {
             this.tileSize = tileSizet;
             this.fileTemplate = fileTemplate;
+            this.urlTemplate = urlTemplate;
+            this.maxTempRange = maxTempRange;
+            this.currentTempRange = currentTempRange;
         }
 
         @Override
         public Tile getTile(int x, int y, int zoom) {
             byte[] image = readTileImage(x, y, zoom);
             return image == null ? TileProvider.NO_TILE : new Tile(this.tileSize, this.tileSize, image);
-        }
-
-        public void setFileTemplate(String fileTemplate) {
-            this.fileTemplate = fileTemplate;
-        }
-
-        public void setUrlTemplate(String urlTemplate) {
-            this.urlTemplate = urlTemplate;
-        }
-
-        public void setCurrentTempRange(double[] currentTempRange) {
-            this.currentTempRange = currentTempRange;
-        }
-
-        public void setTempRange(double[] tempRange) {
-            this.tempRange = tempRange;
-        }
-
-        public void setTileSize(int tileSize) {
-            this.tileSize = tileSize;
         }
 
         private byte[] readTileImage(int x, int y, int zoom) {
@@ -215,6 +158,30 @@ public class AirMapLocalTile extends AirMapFeature {
                     .replace("{y}", Integer.toString((1 << zoom) - 1 - y))
                     .replace("{z}", Integer.toString(zoom));
             return s;
+        }
+    }
+
+    class AIRMapUrlTileProvider extends UrlTileProvider {
+        private String urlTemplate;
+
+        public AIRMapUrlTileProvider(int tileSize, String urlTemplate) {
+            super(tileSize, tileSize);
+            this.urlTemplate = urlTemplate;
+        }
+
+        @Override
+        public synchronized URL getTileUrl(int x, int y, int zoom) {
+            String s = this.urlTemplate
+                    .replace("{x}", Integer.toString(x))
+                    .replace("{y}", Integer.toString((1 << zoom) - 1 - y))
+                    .replace("{z}", Integer.toString(zoom));
+            URL url;
+            try {
+                url = new URL(s);
+            } catch (MalformedURLException e) {
+                throw new AssertionError(e);
+            }
+            return url;
         }
     }
 }

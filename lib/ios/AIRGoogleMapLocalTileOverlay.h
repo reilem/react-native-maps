@@ -15,7 +15,7 @@
 
 @property (nonatomic, strong) NSString *fileTemplate;
 @property (nonatomic, strong) NSString *urlTemplate;
-@property (nonatomic, strong) NSArray *tempRange;
+@property (nonatomic, strong) NSArray *maxTempRange;
 @property (nonatomic, strong) NSArray *currentTempRange;
 
 - (NSURL *)urlInternetPathForZ:(NSUInteger)z x:(NSUInteger)x y:(NSUInteger)y;

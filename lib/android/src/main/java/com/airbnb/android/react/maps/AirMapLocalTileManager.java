@@ -4,8 +4,8 @@ import android.content.Context;
 import android.os.Build;
 import android.util.DisplayMetrics;
 import android.view.WindowManager;
-
 import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.uimanager.ThemedReactContext;
 import com.facebook.react.uimanager.ViewGroupManager;
 import com.facebook.react.uimanager.annotations.ReactProp;
@@ -38,9 +38,24 @@ public class AirMapLocalTileManager extends ViewGroupManager<AirMapLocalTile> {
         return new AirMapLocalTile(context);
     }
 
-    @ReactProp(name = "pathTemplate")
-    public void setPathTemplate(AirMapLocalTile view, String pathTemplate) {
-        view.setPathTemplate(pathTemplate);
+    @ReactProp(name = "fileTemplate")
+    public void setFileTemplate(AirMapLocalTile view, String fileTemplate) {
+        view.setFileTemplate(fileTemplate);
+    }
+
+    @ReactProp(name = "urlTemplate")
+    public void setUrlTemplate(AirMapLocalTile view, String urlTemplate) {
+        view.setUrlTemplate(urlTemplate);
+    }
+
+    @ReactProp(name = "tempRange")
+    public void setTempRange(AirMapLocalTile view, ReadableArray tempRange) {
+        view.setTempRange(toDoubleArray(tempRange));
+    }
+
+    @ReactProp(name = "currentTempRange")
+    public void setCurrentTempRange(AirMapLocalTile view, ReadableArray currentTempRange) {
+        view.setCurrentTempRange(toDoubleArray(currentTempRange));
     }
 
     @ReactProp(name = "tileSize", defaultFloat = 256f)
@@ -51,6 +66,16 @@ public class AirMapLocalTileManager extends ViewGroupManager<AirMapLocalTile> {
     @ReactProp(name = "zIndex", defaultFloat = -1.0f)
     public void setZIndex(AirMapLocalTile view, float zIndex) {
         view.setZIndex(zIndex);
+    }
+
+    private double[] toDoubleArray(ReadableArray readableArray) {
+        if (readableArray == null) return null;
+        double[] result = new double[readableArray.size()];
+        int counter = 0;
+        for (Object d : readableArray.toArrayList()) {
+            result[counter++] = (double)d;
+        }
+        return result;
     }
 
 }

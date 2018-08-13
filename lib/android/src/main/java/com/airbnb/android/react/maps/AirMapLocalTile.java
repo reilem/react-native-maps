@@ -19,12 +19,15 @@ public class AirMapLocalTile extends AirMapFeature {
     class AIRMapLocalTileProvider implements TileProvider {
         private static final int BUFFER_SIZE = 16 * 1024;
         private int tileSize;
-        private String pathTemplate;
+        private String fileTemplate;
+        private String urlTemplate;
+        private double[] currentTempRange;
+        private double[] tempRange;
 
 
-        public AIRMapLocalTileProvider(int tileSizet, String pathTemplate) {
+        public AIRMapLocalTileProvider(int tileSizet, String fileTemplate) {
             this.tileSize = tileSizet;
-            this.pathTemplate = pathTemplate;
+            this.fileTemplate = fileTemplate;
         }
 
         @Override
@@ -33,8 +36,20 @@ public class AirMapLocalTile extends AirMapFeature {
             return image == null ? TileProvider.NO_TILE : new Tile(this.tileSize, this.tileSize, image);
         }
 
-        public void setPathTemplate(String pathTemplate) {
-            this.pathTemplate = pathTemplate;
+        public void setFileTemplate(String fileTemplate) {
+            this.fileTemplate = fileTemplate;
+        }
+
+        public void setUrlTemplate(String urlTemplate) {
+            this.urlTemplate = urlTemplate;
+        }
+
+        public void setCurrentTempRange(double[] currentTempRange) {
+            this.currentTempRange = currentTempRange;
+        }
+
+        public void setTempRange(double[] tempRange) {
+            this.tempRange = tempRange;
         }
 
         public void setTileSize(int tileSize) {
@@ -72,9 +87,9 @@ public class AirMapLocalTile extends AirMapFeature {
         }
 
         private String getTileFilename(int x, int y, int zoom) {
-            String s = this.pathTemplate
+            String s = this.fileTemplate
                     .replace("{x}", Integer.toString(x))
-                    .replace("{y}", Integer.toString(y))
+                    .replace("{y}", Integer.toString((1 << zoom) - 1 - y))
                     .replace("{z}", Integer.toString(zoom));
             return s;
         }
@@ -84,7 +99,10 @@ public class AirMapLocalTile extends AirMapFeature {
     private TileOverlay tileOverlay;
     private AirMapLocalTile.AIRMapLocalTileProvider tileProvider;
 
-    private String pathTemplate;
+    private String fileTemplate;
+    private String urlTemplate;
+    private double[] currentTempRange;
+    private double[] tempRange;
     private float tileSize;
     private float zIndex;
 
@@ -92,48 +110,69 @@ public class AirMapLocalTile extends AirMapFeature {
         super(context);
     }
 
-    public void setPathTemplate(String pathTemplate) {
-        this.pathTemplate = pathTemplate;
+    public void setFileTemplate(String fileTemplate) {
+        this.fileTemplate = fileTemplate;
         if (tileProvider != null) {
-            tileProvider.setPathTemplate(pathTemplate);
+            this.tileProvider.setFileTemplate(fileTemplate);
         }
         if (tileOverlay != null) {
-            tileOverlay.clearTileCache();
+            this.tileOverlay.clearTileCache();
+        }
+    }
+
+    public void setUrlTemplate(String urlTemplate) {
+        this.urlTemplate = urlTemplate;
+        if (tileProvider != null) {
+            this.tileProvider.setUrlTemplate(urlTemplate);
+        }
+    }
+
+    public void setTempRange(double[] tempRange) {
+        this.tempRange = tempRange;
+        if (tileProvider != null) {
+            this.tileProvider.setTempRange(tempRange);
+        }
+    }
+
+    public void setCurrentTempRange(double[] currentTempRange) {
+        this.currentTempRange = currentTempRange;
+        if (tileProvider != null) {
+            this.tileProvider.setCurrentTempRange(currentTempRange);
         }
     }
 
     public void setZIndex(float zIndex) {
         this.zIndex = zIndex;
         if (tileOverlay != null) {
-            tileOverlay.setZIndex(zIndex);
+            this.tileOverlay.setZIndex(zIndex);
         }
     }
 
     public void setTileSize(float tileSize) {
         this.tileSize = tileSize;
         if (tileProvider != null) {
-            tileProvider.setTileSize((int)tileSize);
+            this.tileProvider.setTileSize((int)tileSize);
         }
     }
 
     public TileOverlayOptions getTileOverlayOptions() {
         if (tileOverlayOptions == null) {
-            tileOverlayOptions = createTileOverlayOptions();
+            this.tileOverlayOptions = createTileOverlayOptions();
         }
-        return tileOverlayOptions;
+        return this.tileOverlayOptions;
     }
 
     private TileOverlayOptions createTileOverlayOptions() {
         TileOverlayOptions options = new TileOverlayOptions();
         options.zIndex(zIndex);
-        this.tileProvider = new AirMapLocalTile.AIRMapLocalTileProvider((int)this.tileSize, this.pathTemplate);
+        this.tileProvider = new AirMapLocalTile.AIRMapLocalTileProvider((int)this.tileSize, this.fileTemplate);
         options.tileProvider(this.tileProvider);
         return options;
     }
 
     @Override
     public Object getFeature() {
-        return tileOverlay;
+        return this.tileOverlay;
     }
 
     @Override
@@ -143,6 +182,6 @@ public class AirMapLocalTile extends AirMapFeature {
 
     @Override
     public void removeFromMap(GoogleMap map) {
-        tileOverlay.remove();
+        this.tileOverlay.remove();
     }
 }

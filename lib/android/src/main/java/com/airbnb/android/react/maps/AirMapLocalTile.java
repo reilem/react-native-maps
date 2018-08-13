@@ -1,6 +1,7 @@
 package com.airbnb.android.react.maps;
 
 import android.content.Context;
+import android.util.Log;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.*;
 
@@ -12,7 +13,7 @@ public class AirMapLocalTile extends AirMapFeature {
 
     private TileOverlayOptions tileOverlayOptions;
     private TileOverlay tileOverlay;
-    private TileProvider tileProvider;
+    private GoogleMap map;
 
     private String fileTemplate;
     private String urlTemplate;
@@ -27,61 +28,52 @@ public class AirMapLocalTile extends AirMapFeature {
 
     public void setFileTemplate(String fileTemplate) {
         this.fileTemplate = fileTemplate;
-        this.createTileOverlayOptions();
+        this.updateTileOverlayOptions();
     }
 
     public void setUrlTemplate(String urlTemplate) {
         this.urlTemplate = urlTemplate;
-        this.createTileOverlayOptions();
+        this.updateTileOverlayOptions();
     }
 
     public void setMaxTempRange(double[] maxTempRange) {
         this.maxTempRange = maxTempRange;
-        this.createTileOverlayOptions();
+        this.updateTileOverlayOptions();
     }
 
     public void setCurrentTempRange(double[] currentTempRange) {
         this.currentTempRange = currentTempRange;
-        this.createTileOverlayOptions();
+        this.updateTileOverlayOptions();
     }
 
     public void setZIndex(float zIndex) {
         this.zIndex = zIndex;
-        this.createTileOverlayOptions();
+        this.updateTileOverlayOptions();
     }
 
     public void setTileSize(float tileSize) {
         this.tileSize = tileSize;
-        this.createTileOverlayOptions();
+        this.updateTileOverlayOptions();
     }
 
     public TileOverlayOptions getTileOverlayOptions() {
         if (tileOverlayOptions == null) {
-            this.createTileOverlayOptions();
+            this.updateTileOverlayOptions();
         }
         return this.tileOverlayOptions;
     }
 
-    private void createTileOverlayOptions() {
-        if (this.tileOverlay != null) {
-            this.tileOverlay.clearTileCache();
-        }
-
+    private void updateTileOverlayOptions() {
         TileOverlayOptions options = new TileOverlayOptions();
         options.zIndex(this.zIndex);
-
         boolean onlineReady = this.urlTemplate != null && this.fileTemplate == null;
         if (onlineReady && (this.currentTempRange == null || this.maxTempRange == null)) {
-            AIRMapUrlTileProvider provider = new AirMapLocalTile.AIRMapUrlTileProvider(256, this.urlTemplate);
-            options.tileProvider(provider);
-            this.tileProvider = provider;
+            options.tileProvider(new AirMapLocalTile.AIRMapUrlTileProvider(256, this.urlTemplate));
         } else if (onlineReady || this.fileTemplate != null) {
-            AIRMapLocalTileProvider provider = new AirMapLocalTile.AIRMapLocalTileProvider((int)this.tileSize, this.fileTemplate, this.urlTemplate, this.maxTempRange, this.currentTempRange);
-            options.tileProvider(provider);
-            this.tileProvider = provider;
+            options.tileProvider(new AirMapLocalTile.AIRMapLocalTileProvider(256, this.fileTemplate, this.urlTemplate, this.maxTempRange, this.currentTempRange));
         }
-
         this.tileOverlayOptions = options;
+        this.updateTileOverlay();
     }
 
     @Override
@@ -91,12 +83,22 @@ public class AirMapLocalTile extends AirMapFeature {
 
     @Override
     public void addToMap(GoogleMap map) {
-        this.tileOverlay = map.addTileOverlay(getTileOverlayOptions());
+        this.map = map;
+        this.updateTileOverlay();
     }
 
     @Override
     public void removeFromMap(GoogleMap map) {
         this.tileOverlay.remove();
+    }
+
+    private void updateTileOverlay() {
+        if (this.map != null) {
+            if (this.tileOverlay != null) {
+                this.tileOverlay.remove();
+            }
+            this.tileOverlay = map.addTileOverlay(getTileOverlayOptions());
+        }
     }
 
     class AIRMapLocalTileProvider implements TileProvider {

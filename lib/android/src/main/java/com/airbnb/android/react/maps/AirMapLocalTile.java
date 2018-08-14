@@ -3,39 +3,35 @@ package com.airbnb.android.react.maps;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.util.Log;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.*;
 
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Arrays;
-import java.util.UUID;
 
 public class AirMapLocalTile extends AirMapFeature {
 
     private TileOverlayOptions tileOverlayOptions;
     private TileOverlay tileOverlay;
-    private UrlTileProvider urlTileProvider;
     private GoogleMap map;
 
     private String fileTemplate;
     private String urlTemplate;
     private double[] currentTempRange;
     private double[] maxTempRange;
-    private float tileSize;
+    private int tileSize = 256;
     private float zIndex;
 
     private static final PresetColor[] magma;
 
     static {
         magma = new PresetColor[]{
-                new PresetColor(0.0, new SimpleColor((byte)1, (byte)1, (byte)6)),
-                new PresetColor(0.25, new SimpleColor((byte)72, (byte)20, (byte)97)),
-                new PresetColor(0.5, new SimpleColor((byte)176, (byte)47, (byte)76)),
-                new PresetColor(0.75, new SimpleColor((byte)243, (byte)109, (byte)24)),
-                new PresetColor(1.0, new SimpleColor((byte)249, (byte)1251, (byte)147))
+                new PresetColor(0.0, new SimpleColor(1, 1, 6)),
+                new PresetColor(0.25, new SimpleColor(72, 20, 97)),
+                new PresetColor(0.5, new SimpleColor(176, 47, 76)),
+                new PresetColor(0.75, new SimpleColor(243, 109, 24)),
+                new PresetColor(1.0, new SimpleColor(249, 251, 147))
         };
     }
 
@@ -68,7 +64,7 @@ public class AirMapLocalTile extends AirMapFeature {
         this.updateTileOverlayOptions();
     }
 
-    public void setTileSize(float tileSize) {
+    public void setTileSize(int tileSize) {
         this.tileSize = tileSize;
         this.updateTileOverlayOptions();
     }
@@ -85,9 +81,9 @@ public class AirMapLocalTile extends AirMapFeature {
         options.zIndex(this.zIndex);
         boolean onlineReady = this.urlTemplate != null && this.fileTemplate == null;
         if (onlineReady && (this.currentTempRange == null || this.maxTempRange == null)) {
-            options.tileProvider(new AirMapLocalTile.AIRMapUrlTileProvider(256, this.urlTemplate));
+            options.tileProvider(new AirMapLocalTile.AIRMapUrlTileProvider(this.tileSize, this.urlTemplate));
         } else if (onlineReady || this.fileTemplate != null) {
-            options.tileProvider(new AirMapLocalTile.AIRMapLocalTileProvider(256, this.fileTemplate, this.urlTemplate, this.maxTempRange, this.currentTempRange));
+            options.tileProvider(new AirMapLocalTile.AIRMapLocalTileProvider(this.tileSize, this.fileTemplate, this.urlTemplate, this.maxTempRange, this.currentTempRange));
         }
         this.tileOverlayOptions = options;
         this.updateTileOverlay();
@@ -163,13 +159,11 @@ public class AirMapLocalTile extends AirMapFeature {
                     int[] pixels = getPixelsFromBitmap(bitmap);
                     buffer = new ByteArrayOutputStream();
 
-                    String id = UUID.randomUUID().toString();
-
                     double minTemp = this.maxTempRange[0];
                     double maxTemp = this.maxTempRange[1];
                     double currentMinTemp = this.currentTempRange[0];
                     double currentMaxTemp = this.currentTempRange[1];
-                    Log.i("SMF before", id + " " + Arrays.toString(pixels));
+                    int stepBase = this.tileSize * this.tileSize;
                     int i = 0;
                     for (int pixel : pixels) {
                         int alpha = (pixel >> 24) & 0xFF;
@@ -180,8 +174,8 @@ public class AirMapLocalTile extends AirMapFeature {
                         if (alpha == 0) {
                             pixels[i++] = 0;
                         } else {
-                            double step = (maxTemp - minTemp) / (256 * 256);
-                            double elevation = minTemp + (red * 256 + green + blue) * step;
+                            double step = (maxTemp - minTemp) / stepBase;
+                            double elevation = minTemp + (red * this.tileSize + green + blue) * step;
                             int color;
                             if (elevation < currentMinTemp) {
                                 color = getColorForPercentage(0);
@@ -194,7 +188,6 @@ public class AirMapLocalTile extends AirMapFeature {
                             pixels[i++] = (alpha << 24) + color;
                         }
                     }
-                    Log.i("SMF after", id + " " + Arrays.toString(pixels));
                     bitmap.setPixels(pixels, 0, this.tileSize, 0, 0, this.tileSize, this.tileSize);
                     bitmap.compress(Bitmap.CompressFormat.PNG, 0, buffer);
                     buffer.flush();
@@ -210,7 +203,6 @@ public class AirMapLocalTile extends AirMapFeature {
                         buffer.write(data, 0, nRead);
                     }
                     buffer.flush();
-                    Log.i("SMF", Arrays.toString(buffer.toByteArray()));
                     return buffer.toByteArray();
                 }
             } catch (IOException e) {
@@ -246,16 +238,16 @@ public class AirMapLocalTile extends AirMapFeature {
 
         private int getColorForPercentage(double percent) {
             int index;
-            for (index = 1; index < AirMapLocalTile.magma.length; index++) {
+            for (index = 1; index < AirMapLocalTile.magma.length - 1; index++) {
                 if (percent < AirMapLocalTile.magma[index].percent) break;
             }
             PresetColor lower = AirMapLocalTile.magma[index - 1];
             PresetColor upper = AirMapLocalTile.magma[index ];
             double rangePercent = (percent - lower.percent) / (upper.percent - lower.percent);
             double percentLower = 1 - rangePercent;
-            byte red = (byte)Math.floor(lower.color.red * percentLower + upper.color.red * rangePercent);
-            byte green = (byte)Math.floor(lower.color.green * percentLower + upper.color.green * rangePercent);
-            byte blue = (byte)Math.floor(lower.color.blue * percentLower + upper.color.blue * rangePercent);
+            int red = (int)Math.floor(lower.color.red * percentLower + upper.color.red * rangePercent);
+            int green = (int)Math.floor(lower.color.green * percentLower + upper.color.green * rangePercent);
+            int blue = (int)Math.floor(lower.color.blue * percentLower + upper.color.blue * rangePercent);
             return (red << 16) | (green << 8) | (blue);
         }
     }
@@ -302,10 +294,10 @@ class PresetColor {
 }
 
 class SimpleColor {
-    final byte red;
-    final byte green;
-    final byte blue;
-    SimpleColor(byte red, byte green, byte blue) {
+    final int red;
+    final int green;
+    final int blue;
+    SimpleColor(int red, int green, int blue) {
         this.red = red;
         this.green = green;
         this.blue = blue;

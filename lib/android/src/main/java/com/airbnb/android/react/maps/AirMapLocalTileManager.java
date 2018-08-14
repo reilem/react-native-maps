@@ -58,8 +58,8 @@ public class AirMapLocalTileManager extends ViewGroupManager<AirMapLocalTile> {
         view.setCurrentTempRange(toDoubleArray(currentTempRange));
     }
 
-    @ReactProp(name = "tileSize", defaultFloat = 256f)
-    public void setTileSize(AirMapLocalTile view, float tileSize) {
+    @ReactProp(name = "tileSize", defaultInt = 256)
+    public void setTileSize(AirMapLocalTile view, int tileSize) {
         view.setTileSize(tileSize);
     }
 

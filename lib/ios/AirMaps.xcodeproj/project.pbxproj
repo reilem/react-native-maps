@@ -32,8 +32,8 @@
 		9172ADC3212307ED00A2B4EF /* AIRGoogleMapLocalTileOverlay.m in Sources */ = {isa = PBXBuildFile; fileRef = 9172ADBE212307EC00A2B4EF /* AIRGoogleMapLocalTileOverlay.m */; };
 		9172ADC4212307ED00A2B4EF /* AIRGoogleMapLocalTileManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 9172ADBF212307ED00A2B4EF /* AIRGoogleMapLocalTileManager.m */; };
 		9172ADC5212307ED00A2B4EF /* AIRGoogleMapLocalTile.m in Sources */ = {isa = PBXBuildFile; fileRef = 9172ADC2212307ED00A2B4EF /* AIRGoogleMapLocalTile.m */; };
-		91778908211AFD01009926B1 /* SimpleColor.m in Sources */ = {isa = PBXBuildFile; fileRef = 91778904211AFD01009926B1 /* SimpleColor.m */; };
-		91778909211AFD01009926B1 /* PresetColor.m in Sources */ = {isa = PBXBuildFile; fileRef = 91778907211AFD01009926B1 /* PresetColor.m */; };
+		9172ADDF2123098300A2B4EF /* SimpleColor.m in Sources */ = {isa = PBXBuildFile; fileRef = 9172ADDB2123098300A2B4EF /* SimpleColor.m */; };
+		9172ADE02123098300A2B4EF /* PresetColor.m in Sources */ = {isa = PBXBuildFile; fileRef = 9172ADDE2123098300A2B4EF /* PresetColor.m */; };
 		9B9498CA2017EFB800158761 /* AIRGoogleMapUrlTile.m in Sources */ = {isa = PBXBuildFile; fileRef = 9B9498A62017EFB400158761 /* AIRGoogleMapUrlTile.m */; };
 		9B9498CB2017EFB800158761 /* AIRGoogleMapURLTileManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 9B9498A72017EFB400158761 /* AIRGoogleMapURLTileManager.m */; };
 		9B9498CC2017EFB800158761 /* AIRGMSPolygon.m in Sources */ = {isa = PBXBuildFile; fileRef = 9B9498A82017EFB400158761 /* AIRGMSPolygon.m */; };
@@ -120,10 +120,10 @@
 		9172ADC0212307ED00A2B4EF /* AIRGoogleMapLocalTile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AIRGoogleMapLocalTile.h; path = AirGoogleMaps/AIRGoogleMapLocalTile.h; sourceTree = "<group>"; };
 		9172ADC1212307ED00A2B4EF /* AIRGoogleMapLocalTileOverlay.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AIRGoogleMapLocalTileOverlay.h; path = AirGoogleMaps/AIRGoogleMapLocalTileOverlay.h; sourceTree = "<group>"; };
 		9172ADC2212307ED00A2B4EF /* AIRGoogleMapLocalTile.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AIRGoogleMapLocalTile.m; path = AirGoogleMaps/AIRGoogleMapLocalTile.m; sourceTree = "<group>"; };
-		91778904211AFD01009926B1 /* SimpleColor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SimpleColor.m; sourceTree = "<group>"; };
-		91778905211AFD01009926B1 /* PresetColor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PresetColor.h; sourceTree = "<group>"; };
-		91778906211AFD01009926B1 /* SimpleColor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SimpleColor.h; sourceTree = "<group>"; };
-		91778907211AFD01009926B1 /* PresetColor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PresetColor.m; sourceTree = "<group>"; };
+		9172ADDB2123098300A2B4EF /* SimpleColor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SimpleColor.m; sourceTree = "<group>"; };
+		9172ADDC2123098300A2B4EF /* PresetColor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PresetColor.h; sourceTree = "<group>"; };
+		9172ADDD2123098300A2B4EF /* SimpleColor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SimpleColor.h; sourceTree = "<group>"; };
+		9172ADDE2123098300A2B4EF /* PresetColor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PresetColor.m; sourceTree = "<group>"; };
 		9B9498A42017EFB400158761 /* AIRGoogleMapCallout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AIRGoogleMapCallout.h; path = AirGoogleMaps/AIRGoogleMapCallout.h; sourceTree = "<group>"; };
 		9B9498A52017EFB400158761 /* AIRGoogleMapPolygonManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AIRGoogleMapPolygonManager.h; path = AirGoogleMaps/AIRGoogleMapPolygonManager.h; sourceTree = "<group>"; };
 		9B9498A62017EFB400158761 /* AIRGoogleMapUrlTile.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AIRGoogleMapUrlTile.m; path = AirGoogleMaps/AIRGoogleMapUrlTile.m; sourceTree = "<group>"; };
@@ -250,21 +250,22 @@
 			path = AirMaps;
 			sourceTree = "<group>";
 		};
-		91778903211AFD01009926B1 /* ColorHelpers */ = {
+		9172ADDA2123098300A2B4EF /* ColorHelpers */ = {
 			isa = PBXGroup;
 			children = (
-				91778904211AFD01009926B1 /* SimpleColor.m */,
-				91778905211AFD01009926B1 /* PresetColor.h */,
-				91778906211AFD01009926B1 /* SimpleColor.h */,
-				91778907211AFD01009926B1 /* PresetColor.m */,
+				9172ADDB2123098300A2B4EF /* SimpleColor.m */,
+				9172ADDC2123098300A2B4EF /* PresetColor.h */,
+				9172ADDD2123098300A2B4EF /* SimpleColor.h */,
+				9172ADDE2123098300A2B4EF /* PresetColor.m */,
 			);
-			path = ColorHelpers;
+			name = ColorHelpers;
+			path = AirGoogleMaps/ColorHelpers;
 			sourceTree = "<group>";
 		};
 		9B9498A32017EF9D00158761 /* AirGoogleMaps */ = {
 			isa = PBXGroup;
 			children = (
-				91778903211AFD01009926B1 /* ColorHelpers */,
+				9172ADDA2123098300A2B4EF /* ColorHelpers */,
 				B5EA3BA82098E22B000E7AFD /* AIRDummyView.h */,
 				B5EA3BA72098E22B000E7AFD /* AIRDummyView.m */,
 				9B9498C12017EFB700158761 /* AIRGMSMarker.h */,
@@ -379,14 +380,14 @@
 				1125B2E01C4AD3DA007D0023 /* AIRMapManager.m in Sources */,
 				1125B2E61C4AD3DA007D0023 /* AIRMapPolylineManager.m in Sources */,
 				9B9498DA2017EFB800158761 /* AIRGoogleMapPolygon.m in Sources */,
-				91778909211AFD01009926B1 /* PresetColor.m in Sources */,
+				9172ADE02123098300A2B4EF /* PresetColor.m in Sources */,
 				9B9498D12017EFB800158761 /* AIRGoogleMapCircle.m in Sources */,
 				1125B2DD1C4AD3DA007D0023 /* AIRMapCircle.m in Sources */,
 				9B9498CE2017EFB800158761 /* AIRGMSMarker.m in Sources */,
 				9B9498D72017EFB800158761 /* AIRGoogleMapManager.m in Sources */,
 				19DABC7F1E7C9D3C00F41150 /* RCTConvert+AirMap.m in Sources */,
 				1125B2E51C4AD3DA007D0023 /* AIRMapPolyline.m in Sources */,
-				91778908211AFD01009926B1 /* SimpleColor.m in Sources */,
+				9172ADDF2123098300A2B4EF /* SimpleColor.m in Sources */,
 				9172ADC4212307ED00A2B4EF /* AIRGoogleMapLocalTileManager.m in Sources */,
 				9B9498D52017EFB800158761 /* AIRGoogleMapPolyline.m in Sources */,
 				9B9498CF2017EFB800158761 /* AIRGMSPolyline.m in Sources */,

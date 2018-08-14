@@ -108,18 +108,14 @@ public class AirMapLocalTile extends AirMapFeature {
     private void updateTileOverlay() {
         if (this.map != null) {
             if (this.tileOverlay != null) {
+                this.tileOverlay.clearTileCache();
                 this.tileOverlay.remove();
             }
             this.tileOverlay = map.addTileOverlay(getTileOverlayOptions());
         }
     }
 
-    interface CustomTileProvider {
-        public void disable();
-    }
-
-    class AIRMapLocalTileProvider implements TileProvider, CustomTileProvider {
-        private boolean disabled = false;
+    class AIRMapLocalTileProvider implements TileProvider {
         private static final int BUFFER_SIZE = 16 * 1024;
         private int tileSize;
         private String fileTemplate;
@@ -138,96 +134,135 @@ public class AirMapLocalTile extends AirMapFeature {
 
         @Override
         public Tile getTile(int x, int y, int zoom) {
-            if (this.disabled) return TileProvider.NO_TILE;
             byte[] image = readTileImage(x, y, zoom);
             return image == null ? TileProvider.NO_TILE : new Tile(this.tileSize, this.tileSize, image);
         }
 
-        @Override
-        public void disable() {
-            this.disabled = true;
-        }
-
         private byte[] readTileImage(int x, int y, int zoom) {
-            InputStream in = null;
-            ByteArrayOutputStream buffer = null;
-            File file = new File(getTileFilename(x, y, zoom));
-
             try {
-                if (this.maxTempRange != null && this.currentTempRange != null) {
-                    Bitmap bitmap = makeBitmapFromFile(file);
-                    int[] pixels = getPixelsFromBitmap(bitmap);
-                    buffer = new ByteArrayOutputStream();
-
-                    double minTemp = this.maxTempRange[0];
-                    double maxTemp = this.maxTempRange[1];
-                    double currentMinTemp = this.currentTempRange[0];
-                    double currentMaxTemp = this.currentTempRange[1];
-                    int stepBase = this.tileSize * this.tileSize;
-                    int i = 0;
-                    for (int pixel : pixels) {
-                        int alpha = (pixel >> 24) & 0xFF;
-                        int red = (pixel >> 16) & 0x00FF;
-                        int green = (pixel >> 8) & 0x0000FF;
-                        int blue = pixel & 0x000000FF;
-
-                        if (alpha == 0) {
-                            pixels[i++] = 0;
-                        } else {
-                            double step = (maxTemp - minTemp) / stepBase;
-                            double elevation = minTemp + (red * this.tileSize + green + blue) * step;
-                            int color;
-                            if (elevation < currentMinTemp) {
-                                color = getColorForPercentage(0);
-                            } else if (elevation > currentMaxTemp) {
-                                color = getColorForPercentage(1);
-                            } else {
-                                double ratio = (elevation - currentMinTemp) / (currentMaxTemp - currentMinTemp);
-                                color = getColorForPercentage(ratio);
-                            }
-                            pixels[i++] = (alpha << 24) + color;
-                        }
+                if (this.fileTemplate != null) {
+                    File file = new File(getTileFilename(x, y, zoom));
+                    if (!file.exists()) return null;
+                    if (this.maxTempRange != null && this.currentTempRange != null) {
+                        return processBitmap(makeBitmapFromFile(file));
+                    } else {
+                        return getDataFromFile(file);
                     }
-                    bitmap.setPixels(pixels, 0, this.tileSize, 0, 0, this.tileSize, this.tileSize);
-                    bitmap.compress(Bitmap.CompressFormat.PNG, 0, buffer);
-                    buffer.flush();
-                    return buffer.toByteArray();
-                } else {
-                    in = new FileInputStream(file);
-                    buffer = new ByteArrayOutputStream();
-
-                    int nRead;
-                    byte[] data = new byte[BUFFER_SIZE];
-
-                    while ((nRead = in.read(data, 0, BUFFER_SIZE)) != -1) {
-                        buffer.write(data, 0, nRead);
+                } else if (this.urlTemplate != null) {
+                    URL url = getTileURL(x, y, zoom);
+                    if (this.maxTempRange != null && this.currentTempRange != null) {
+                        return processBitmap(makeBitmapFromURL(url));
+                    } else {
+                        return getDataFromUrl(url);
                     }
-                    buffer.flush();
-                    return buffer.toByteArray();
                 }
             } catch (IOException e) {
                 e.printStackTrace();
-                return null;
             } catch (OutOfMemoryError e) {
                 e.printStackTrace();
-                return null;
-            } finally {
-                if (in != null) try { in.close(); } catch (Exception ignored) {}
-                if (buffer != null) try { buffer.close(); } catch (Exception ignored) {}
             }
+            return null;
         }
 
         private String getTileFilename(int x, int y, int zoom) {
-            return this.fileTemplate
+            return parsePath(this.fileTemplate, x, y, zoom);
+        }
+
+        private URL getTileURL(int x, int y, int zoom) throws MalformedURLException {
+            return new URL(parsePath(this.urlTemplate, x, y, zoom));
+        }
+
+        private String parsePath(String path, int x, int y, int zoom) {
+            return path
                     .replace("{x}", Integer.toString(x))
                     .replace("{y}", Integer.toString((1 << zoom) - 1 - y))
                     .replace("{z}", Integer.toString(zoom));
         }
 
+        private byte[] getDataFromFile(File file) throws IOException {
+            InputStream in = new FileInputStream(file);
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+
+            int nRead;
+            byte[] data = new byte[BUFFER_SIZE];
+
+            while ((nRead = in.read(data, 0, BUFFER_SIZE)) != -1) {
+                buffer.write(data, 0, nRead);
+            }
+            buffer.flush();
+            byte[] result = buffer.toByteArray();
+            buffer.close();
+            return result;
+        }
+
+        private byte[] getDataFromUrl(URL url) throws IOException {
+            InputStream in = url.openStream();
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+
+            int nRead;
+            byte[] data = new byte[BUFFER_SIZE];
+
+            while ((nRead = in.read(data, 0, BUFFER_SIZE)) != -1) {
+                buffer.write(data, 0, nRead);
+            }
+            buffer.flush();
+            byte[] result = buffer.toByteArray();
+            buffer.close();
+            return result;
+        }
+
+        private byte[] processBitmap(Bitmap bitmap) throws IOException {
+            int[] pixels = getPixelsFromBitmap(bitmap);
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+            double minTemp = this.maxTempRange[0];
+            double maxTemp = this.maxTempRange[1];
+            double currentMinTemp = this.currentTempRange[0];
+            double currentMaxTemp = this.currentTempRange[1];
+            int stepBase = this.tileSize * this.tileSize;
+            int i = 0;
+            for (int pixel : pixels) {
+                int alpha = (pixel >> 24) & 0xFF;
+                int red = (pixel >> 16) & 0x00FF;
+                int green = (pixel >> 8) & 0x0000FF;
+                int blue = pixel & 0x000000FF;
+
+                if (alpha == 0) {
+                    pixels[i++] = 0;
+                } else {
+                    double step = (maxTemp - minTemp) / stepBase;
+                    double elevation = minTemp + (red * this.tileSize + green + blue) * step;
+                    int color;
+                    if (elevation < currentMinTemp) {
+                        color = getColorForPercentage(0);
+                    } else if (elevation > currentMaxTemp) {
+                        color = getColorForPercentage(1);
+                    } else {
+                        double ratio = (elevation - currentMinTemp) / (currentMaxTemp - currentMinTemp);
+                        color = getColorForPercentage(ratio);
+                    }
+                    pixels[i++] = (alpha << 24) + color;
+                }
+            }
+            bitmap.setPixels(pixels, 0, this.tileSize, 0, 0, this.tileSize, this.tileSize);
+            bitmap.compress(Bitmap.CompressFormat.PNG, 0, buffer);
+            buffer.flush();
+            byte[] result = buffer.toByteArray();
+            buffer.close();
+            return result;
+        }
+
         private Bitmap makeBitmapFromFile(File file) {
+            return BitmapFactory.decodeFile(file.getAbsolutePath(), makeBitmapOptions());
+        }
+
+        private Bitmap makeBitmapFromURL(URL url) throws IOException {
+            return BitmapFactory.decodeStream(url.openStream(), null, makeBitmapOptions());
+        }
+
+        private BitmapFactory.Options makeBitmapOptions() {
             BitmapFactory.Options options = new BitmapFactory.Options();
             options.inMutable = true;
-            return BitmapFactory.decodeFile(file.getAbsolutePath(), options);
+            return options;
         }
 
         private int[] getPixelsFromBitmap(Bitmap bitmap) {
@@ -252,7 +287,7 @@ public class AirMapLocalTile extends AirMapFeature {
         }
     }
 
-    class AIRMapUrlTileProvider extends UrlTileProvider implements CustomTileProvider {
+    class AIRMapUrlTileProvider extends UrlTileProvider {
         private boolean disabled = false;
         private String urlTemplate;
 
@@ -274,11 +309,6 @@ public class AirMapLocalTile extends AirMapFeature {
                 throw new AssertionError(e);
             }
             return url;
-        }
-
-        @Override
-        public void disable() {
-            this.disabled = true;
         }
     }
 

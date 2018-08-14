@@ -98,7 +98,7 @@ static NSArray *magmaPreset = nil;
             uint blue = pixels[idx+2];
             uint alpha = pixels[idx+3];
 
-            if (minTemp == nil || maxTemp == nil || alpha == 0) {
+            if (alpha == 0) {
                 pixels[idx] = 0;
                 pixels[idx+1] = 0;
                 pixels[idx+2] = 0;
@@ -121,24 +121,21 @@ static NSArray *magmaPreset = nil;
         }
     }
 
-    cgImage = CGBitmapContextCreateImage(context); //create a CGIMageRef from our pixeldata
-    //release the drawing env and pixel data
+    cgImage = CGBitmapContextCreateImage(context);
     CGContextRelease(context);
     free(pixels);
 
-    //load our new image
     return [UIImage imageWithCGImage:cgImage];
 }
 
 - (unsigned char *)_getColorForPercentage:(double)percent {
     unsigned char *colors = malloc(3);
-    NSArray<PresetColor *> *magma = magmaPreset;
     int index = 1;
-    for (index = 1; index < [magma count] - 1; index++) {
-        if (percent < magma[index].percent) break;
+    for (index = 1; index < [magmaPreset count] - 1; index++) {
+        if (percent < magmaPreset[index].percent) break;
     }
-    PresetColor *lower = magma[index - 1];
-    PresetColor *upper = magma[index];
+    PresetColor *lower = magmaPreset[index - 1];
+    PresetColor *upper = magmaPreset[index];
     double rangePercent = (percent - lower.percent) / (upper.percent - lower.percent);
     double percentLower = 1 - rangePercent;
     colors[0] = floor(lower.color.r * percentLower + upper.color.r * rangePercent);

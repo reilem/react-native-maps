@@ -1,6 +1,8 @@
 package com.airbnb.android.react.maps;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.util.Log;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.*;
@@ -8,11 +10,14 @@ import com.google.android.gms.maps.model.*;
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Arrays;
+import java.util.UUID;
 
 public class AirMapLocalTile extends AirMapFeature {
 
     private TileOverlayOptions tileOverlayOptions;
     private TileOverlay tileOverlay;
+    private UrlTileProvider urlTileProvider;
     private GoogleMap map;
 
     private String fileTemplate;
@@ -21,6 +26,18 @@ public class AirMapLocalTile extends AirMapFeature {
     private double[] maxTempRange;
     private float tileSize;
     private float zIndex;
+
+    private static final PresetColor[] magma;
+
+    static {
+        magma = new PresetColor[]{
+                new PresetColor(0.0, new SimpleColor((byte)1, (byte)1, (byte)6)),
+                new PresetColor(0.25, new SimpleColor((byte)72, (byte)20, (byte)97)),
+                new PresetColor(0.5, new SimpleColor((byte)176, (byte)47, (byte)76)),
+                new PresetColor(0.75, new SimpleColor((byte)243, (byte)109, (byte)24)),
+                new PresetColor(1.0, new SimpleColor((byte)249, (byte)1251, (byte)147))
+        };
+    }
 
     public AirMapLocalTile(Context context) {
         super(context);
@@ -101,7 +118,12 @@ public class AirMapLocalTile extends AirMapFeature {
         }
     }
 
-    class AIRMapLocalTileProvider implements TileProvider {
+    interface CustomTileProvider {
+        public void disable();
+    }
+
+    class AIRMapLocalTileProvider implements TileProvider, CustomTileProvider {
+        private boolean disabled = false;
         private static final int BUFFER_SIZE = 16 * 1024;
         private int tileSize;
         private String fileTemplate;
@@ -120,8 +142,14 @@ public class AirMapLocalTile extends AirMapFeature {
 
         @Override
         public Tile getTile(int x, int y, int zoom) {
+            if (this.disabled) return TileProvider.NO_TILE;
             byte[] image = readTileImage(x, y, zoom);
             return image == null ? TileProvider.NO_TILE : new Tile(this.tileSize, this.tileSize, image);
+        }
+
+        @Override
+        public void disable() {
+            this.disabled = true;
         }
 
         private byte[] readTileImage(int x, int y, int zoom) {
@@ -130,18 +158,61 @@ public class AirMapLocalTile extends AirMapFeature {
             File file = new File(getTileFilename(x, y, zoom));
 
             try {
-                in = new FileInputStream(file);
-                buffer = new ByteArrayOutputStream();
+                if (this.maxTempRange != null && this.currentTempRange != null) {
+                    Bitmap bitmap = makeBitmapFromFile(file);
+                    int[] pixels = getPixelsFromBitmap(bitmap);
+                    buffer = new ByteArrayOutputStream();
 
-                int nRead;
-                byte[] data = new byte[BUFFER_SIZE];
+                    String id = UUID.randomUUID().toString();
 
-                while ((nRead = in.read(data, 0, BUFFER_SIZE)) != -1) {
-                    buffer.write(data, 0, nRead);
+                    double minTemp = this.maxTempRange[0];
+                    double maxTemp = this.maxTempRange[1];
+                    double currentMinTemp = this.currentTempRange[0];
+                    double currentMaxTemp = this.currentTempRange[1];
+                    Log.i("SMF before", id + " " + Arrays.toString(pixels));
+                    int i = 0;
+                    for (int pixel : pixels) {
+                        int alpha = (pixel >> 24) & 0xFF;
+                        int red = (pixel >> 16) & 0x00FF;
+                        int green = (pixel >> 8) & 0x0000FF;
+                        int blue = pixel & 0x000000FF;
+
+                        if (alpha == 0) {
+                            pixels[i++] = 0;
+                        } else {
+                            double step = (maxTemp - minTemp) / (256 * 256);
+                            double elevation = minTemp + (red * 256 + green + blue) * step;
+                            int color;
+                            if (elevation < currentMinTemp) {
+                                color = getColorForPercentage(0);
+                            } else if (elevation > currentMaxTemp) {
+                                color = getColorForPercentage(1);
+                            } else {
+                                double ratio = (elevation - currentMinTemp) / (currentMaxTemp - currentMinTemp);
+                                color = getColorForPercentage(ratio);
+                            }
+                            pixels[i++] = (alpha << 24) + color;
+                        }
+                    }
+                    Log.i("SMF after", id + " " + Arrays.toString(pixels));
+                    bitmap.setPixels(pixels, 0, this.tileSize, 0, 0, this.tileSize, this.tileSize);
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 0, buffer);
+                    buffer.flush();
+                    return buffer.toByteArray();
+                } else {
+                    in = new FileInputStream(file);
+                    buffer = new ByteArrayOutputStream();
+
+                    int nRead;
+                    byte[] data = new byte[BUFFER_SIZE];
+
+                    while ((nRead = in.read(data, 0, BUFFER_SIZE)) != -1) {
+                        buffer.write(data, 0, nRead);
+                    }
+                    buffer.flush();
+                    Log.i("SMF", Arrays.toString(buffer.toByteArray()));
+                    return buffer.toByteArray();
                 }
-                buffer.flush();
-
-                return buffer.toByteArray();
             } catch (IOException e) {
                 e.printStackTrace();
                 return null;
@@ -155,15 +226,42 @@ public class AirMapLocalTile extends AirMapFeature {
         }
 
         private String getTileFilename(int x, int y, int zoom) {
-            String s = this.fileTemplate
+            return this.fileTemplate
                     .replace("{x}", Integer.toString(x))
                     .replace("{y}", Integer.toString((1 << zoom) - 1 - y))
                     .replace("{z}", Integer.toString(zoom));
-            return s;
+        }
+
+        private Bitmap makeBitmapFromFile(File file) {
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inMutable = true;
+            return BitmapFactory.decodeFile(file.getAbsolutePath(), options);
+        }
+
+        private int[] getPixelsFromBitmap(Bitmap bitmap) {
+            int[] pixels = new int[this.tileSize * this.tileSize];
+            bitmap.getPixels(pixels, 0, this.tileSize, 0, 0, this.tileSize, this.tileSize);
+            return pixels;
+        }
+
+        private int getColorForPercentage(double percent) {
+            int index;
+            for (index = 1; index < AirMapLocalTile.magma.length; index++) {
+                if (percent < AirMapLocalTile.magma[index].percent) break;
+            }
+            PresetColor lower = AirMapLocalTile.magma[index - 1];
+            PresetColor upper = AirMapLocalTile.magma[index ];
+            double rangePercent = (percent - lower.percent) / (upper.percent - lower.percent);
+            double percentLower = 1 - rangePercent;
+            byte red = (byte)Math.floor(lower.color.red * percentLower + upper.color.red * rangePercent);
+            byte green = (byte)Math.floor(lower.color.green * percentLower + upper.color.green * rangePercent);
+            byte blue = (byte)Math.floor(lower.color.blue * percentLower + upper.color.blue * rangePercent);
+            return (red << 16) | (green << 8) | (blue);
         }
     }
 
-    class AIRMapUrlTileProvider extends UrlTileProvider {
+    class AIRMapUrlTileProvider extends UrlTileProvider implements CustomTileProvider {
+        private boolean disabled = false;
         private String urlTemplate;
 
         public AIRMapUrlTileProvider(int tileSize, String urlTemplate) {
@@ -173,17 +271,43 @@ public class AirMapLocalTile extends AirMapFeature {
 
         @Override
         public synchronized URL getTileUrl(int x, int y, int zoom) {
-            String s = this.urlTemplate
-                    .replace("{x}", Integer.toString(x))
-                    .replace("{y}", Integer.toString((1 << zoom) - 1 - y))
-                    .replace("{z}", Integer.toString(zoom));
-            URL url;
+            URL url = null;
             try {
-                url = new URL(s);
+                if (disabled) return url;
+                url = new URL(this.urlTemplate
+                        .replace("{x}", Integer.toString(x))
+                        .replace("{y}", Integer.toString((1 << zoom) - 1 - y))
+                        .replace("{z}", Integer.toString(zoom)));
             } catch (MalformedURLException e) {
                 throw new AssertionError(e);
             }
             return url;
         }
+
+        @Override
+        public void disable() {
+            this.disabled = true;
+        }
+    }
+
+}
+
+class PresetColor {
+    final double percent;
+    final SimpleColor color;
+    PresetColor(double percent, SimpleColor color) {
+        this.percent = percent;
+        this.color = color;
+    }
+}
+
+class SimpleColor {
+    final byte red;
+    final byte green;
+    final byte blue;
+    SimpleColor(byte red, byte green, byte blue) {
+        this.red = red;
+        this.green = green;
+        this.blue = blue;
     }
 }

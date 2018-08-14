@@ -58,10 +58,10 @@
     self.tileLayer.map = nil;
 
     AIRGoogleMapLocalTileOverlay *newTileLayer = [AIRGoogleMapLocalTileOverlay new];
-    if (self.fileTemplate) newTileLayer.fileTemplate = self.fileTemplate;
-    if (self.urlTemplate) newTileLayer.urlTemplate = self.urlTemplate;
-    if (self.tempRange) newTileLayer.tempRange = self.tempRange;
-    if (self.currentTempRange) newTileLayer.currentTempRange = self.currentTempRange;
+    newTileLayer.fileTemplate = self.fileTemplate;
+    newTileLayer.urlTemplate = self.urlTemplate;
+    newTileLayer.maxTempRange = self.maxTempRange;
+    newTileLayer.currentTempRange = self.currentTempRange;
     if (map) newTileLayer.map = map;
     return newTileLayer;
 }

@@ -7,7 +7,7 @@
 
 #import "AIRGoogleMapLocalTileOverlay.h"
 
-static NSArray *magmaPreset = nil;
+static NSArray<PresetColor *> *magmaPreset = nil;
 
 @implementation AIRGoogleMapLocalTileOverlay
 

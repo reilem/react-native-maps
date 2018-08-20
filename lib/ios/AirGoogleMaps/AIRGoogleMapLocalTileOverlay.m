@@ -8,6 +8,9 @@
 #import "AIRGoogleMapLocalTileOverlay.h"
 
 static NSArray<PresetColor *> *magmaPreset = nil;
+static float interval = 0.25;
+static float tileSize = 256;
+static float tileArea = 256 * 256;
 
 @implementation AIRGoogleMapLocalTileOverlay
 
@@ -73,26 +76,26 @@ static NSArray<PresetColor *> *magmaPreset = nil;
 
 -(UIImage *)processImage:(UIImage *)image {
     if (!self.maxTempRange || !self.currentTempRange || !image) return image;
-    NSNumber *minTemp = self.maxTempRange[0];
-    NSNumber *maxTemp = self.maxTempRange[1];
-    NSNumber *currentMinTemp = self.currentTempRange[0];
-    NSNumber *currentMaxTemp = self.currentTempRange[1];
+    double minTemp = [self.maxTempRange[0] doubleValue];
+    double maxTemp = [self.maxTempRange[1] doubleValue];
+    double currentMinTemp = [self.currentTempRange[0] doubleValue];
+    double currentMaxTemp = [self.currentTempRange[1] doubleValue];
 
     // Convert UIImage to CGImage, extract width & height + allocate pixel array.
     CGImageRef cgImage = image.CGImage;
     size_t width = CGImageGetWidth(cgImage);
     size_t height = CGImageGetHeight(cgImage);
-    unsigned char *pixels = malloc(width*height*4);
+    unsigned char *pixels = malloc(width * height * 4);
     // Create color space and create a CGContext + release color space
     CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-    CGContextRef context = CGBitmapContextCreate(pixels, width, height, 8, 4*width, colorSpace, kCGImageAlphaPremultipliedLast);
+    CGContextRef context = CGBitmapContextCreate(pixels, width, height, 8, 4 * width, colorSpace, kCGImageAlphaPremultipliedLast);
     CGColorSpaceRelease(colorSpace);
 
     CGContextDrawImage(context, CGRectMake(0, 0, width, height), cgImage);
 
-    for (int y=0;y<height;++y){
-        for (int x=0;x<width;++x){
-            long idx = (width*y+x)*4; //the index of pixel(x,y) in the 1d array pixels
+    for (int y = 0; y < height; ++y){
+        for (int x = 0; x < width; ++x){
+            long idx = (width * y + x) * 4; //the index of pixel(x,y) in the 1d array pixels
             uint red = pixels[idx];
             uint green = pixels[idx+1];
             uint blue = pixels[idx+2];
@@ -103,15 +106,14 @@ static NSArray<PresetColor *> *magmaPreset = nil;
                 pixels[idx+1] = 0;
                 pixels[idx+2] = 0;
             } else {
-                double step = ([maxTemp doubleValue] - [minTemp doubleValue]) / (256 * 256);
-                double elevation = [minTemp doubleValue] + (red * 256 + green + blue) * step;
+                double elevation = minTemp + (red * tileSize + green + blue) * ((maxTemp - minTemp) / tileArea);
                 unsigned char *colors;
-                if (elevation < [currentMinTemp doubleValue]) {
+                if (elevation < currentMinTemp) {
                     colors = [self _getColorForPercentage:0];
-                } else if (elevation > [currentMaxTemp doubleValue]) {
+                } else if (elevation > currentMaxTemp) {
                     colors = [self _getColorForPercentage:1];
                 } else {
-                    double ratio = (elevation - [currentMinTemp doubleValue]) / ([currentMaxTemp doubleValue] - [currentMinTemp doubleValue]);
+                    double ratio = (elevation - currentMinTemp) / (currentMaxTemp - currentMinTemp);
                     colors = [self _getColorForPercentage:ratio];
                 }
                 pixels[idx] = colors[0];
@@ -130,10 +132,9 @@ static NSArray<PresetColor *> *magmaPreset = nil;
 
 - (unsigned char *)_getColorForPercentage:(double)percent {
     unsigned char *colors = malloc(3);
-    int index = 1;
-    for (index = 1; index < [magmaPreset count] - 1; index++) {
-        if (percent < magmaPreset[index].percent) break;
-    }
+    int index;
+    if (percent == 0.0f) index = 1;
+    else index = ceil(percent / interval);
     PresetColor *lower = magmaPreset[index - 1];
     PresetColor *upper = magmaPreset[index];
     double rangePercent = (percent - lower.percent) / (upper.percent - lower.percent);

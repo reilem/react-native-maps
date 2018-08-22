@@ -107,18 +107,13 @@ static float tileArea = 256 * 256;
                 pixels[idx+2] = 0;
             } else {
                 double elevation = minTemp + (red * tileSize + green + blue) * ((maxTemp - minTemp) / tileArea);
-                unsigned char *colors;
                 if (elevation < currentMinTemp) {
-                    colors = [self _getColorForPercentage:0];
+                    [self _setColorForPercentage:0 pixels:pixels index:idx];
                 } else if (elevation > currentMaxTemp) {
-                    colors = [self _getColorForPercentage:1];
+                    [self _setColorForPercentage:1 pixels:pixels index:idx];
                 } else {
-                    double ratio = (elevation - currentMinTemp) / (currentMaxTemp - currentMinTemp);
-                    colors = [self _getColorForPercentage:ratio];
+                    [self _setColorForPercentage:(elevation - currentMinTemp) / (currentMaxTemp - currentMinTemp) pixels:pixels index:idx];
                 }
-                pixels[idx] = colors[0];
-                pixels[idx+1] = colors[1];
-                pixels[idx+2] = colors[2];
             }
         }
     }
@@ -130,8 +125,7 @@ static float tileArea = 256 * 256;
     return [UIImage imageWithCGImage:cgImage];
 }
 
-- (unsigned char *)_getColorForPercentage:(double)percent {
-    unsigned char *colors = malloc(3);
+- (void)_setColorForPercentage:(double)percent pixels:(unsigned char *)pixels index:(int)idx {
     int index;
     if (percent == 0.0f) index = 1;
     else index = ceil(percent / interval);
@@ -139,10 +133,9 @@ static float tileArea = 256 * 256;
     PresetColor *upper = magmaPreset[index];
     double rangePercent = (percent - lower.percent) / (upper.percent - lower.percent);
     double percentLower = 1 - rangePercent;
-    colors[0] = floor(lower.color.r * percentLower + upper.color.r * rangePercent);
-    colors[1] = floor(lower.color.g * percentLower + upper.color.g * rangePercent);
-    colors[2] = floor(lower.color.b * percentLower + upper.color.b * rangePercent);
-    return colors;
+    pixels[idx] = floor(lower.color.r * percentLower + upper.color.r * rangePercent);
+    pixels[idx + 1] = floor(lower.color.g * percentLower + upper.color.g * rangePercent);
+    pixels[idx + 2] = floor(lower.color.b * percentLower + upper.color.b * rangePercent);
 }
 
 @end
